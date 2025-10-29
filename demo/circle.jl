@@ -5,7 +5,7 @@ using SlicedDistributions
 δ = readdlm("demo/data/circle.csv", ',')
 
 # Fit Sliced Normal Distribution
-d = 3
+d = 4
 b = 10000
 
 @time sn, lh = SlicedNormal(δ, d, b, [-4, -4], [4, 4])

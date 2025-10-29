@@ -6,7 +6,6 @@ struct SlicedNormal <: SlicedDistribution
     Q::Matrix{<:Real}
     lb::AbstractVector{<:Real}
     ub::AbstractVector{<:Real}
-    γ::Real
     c::Real
 end
 
@@ -17,7 +16,7 @@ function SlicedNormal(
     lb::AbstractVector{<:Real}=vec(minimum(δ; dims=2)),
     ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
 )
-    s = QuasiMonteCarlo.sample(b, lb, ub, HaltonSample())
+    s = QuasiMonteCarlo.sample(b, lb, ub, SobolSample())
 
     t = monomials(["δ$i" for i in 1:size(δ, 1)], d, GradedLexicographicOrder())
     fp = MonomialFeatureSpace(t)
@@ -32,14 +31,13 @@ function SlicedNormal(
         hcat(-P*μ, P)
     )
 
-    # normalisation constants
-    γ = (2π)^(length(fp)/2) * sqrt(det(inv(P)))
-    cΔ = prod(ub - lb) / b * sum([γ * fz(zΔ[:,i], Q) for i in 1:b])
+    # normalisation constant
+    cΔ = prod(ub-lb) / b * sum([exp(-ϕ(zΔ[:,i], Q)/2.0) for i in 1:b])
 
     # likelihood in feature space
-    lh = sum([log(fz(zδ[:, i ], Q)) for i in 1:size(δ,2)])
+    lh = sum([log(fz(zδ[:, i ], Q) / cΔ) for i in 1:size(δ,2)])
 
-    return SlicedNormal(d, fp, Q, lb, ub, γ, cΔ), lh
+    return SlicedNormal(d, fp, Q, lb, ub,cΔ), lh
 end
 
 function ϕ(z::Vector{<:Real}, Q::Matrix{<:Real})
@@ -47,7 +45,7 @@ function ϕ(z::Vector{<:Real}, Q::Matrix{<:Real})
 end
 
 function fz(z::Vector{<:Real}, Q::Matrix{<:Real})
-    return exp(-ϕ(z,Q)/2.0) / sqrt(κ * (2π)^length(z) * det(inv(Q)))
+    return exp(-ϕ(z,Q)/2.0)
 end
 
 Base.length(sn::SlicedNormal) = length(sn.lb)
@@ -55,7 +53,7 @@ Base.length(sn::SlicedNormal) = length(sn.lb)
 function _logpdf(sn::SlicedNormal, δ::AbstractArray)
     if all(sn.lb .<= δ .<= sn.ub)
         z = sn.fp(δ)
-        return log((sn.γ / sn.c) * fz(z, sn.Q))
+        return log(fz(z, sn.Q) / sn.c )
     else
         return log(0)
     end
