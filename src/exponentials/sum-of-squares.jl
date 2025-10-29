@@ -57,7 +57,7 @@ end
 
 Zsos(z::AbstractVector, sn::SlicedNormal) = Zsos(z, sn.μ, sn.M)
 
-function mean_and_covariance(z::AbstractMatrix)
+function mean_and_precvision(z::AbstractMatrix)
     μ = vec(mean(z; dims=2))
     P = Hermitian(inv(cov(z; dims=2)))
 

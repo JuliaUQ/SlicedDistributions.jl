@@ -81,13 +81,22 @@ function get_hessian(zΔ::Matrix{<:Real}, n::Integer)
     return f
 end
 
+function mean_and_precision(z::AbstractMatrix)
+    μ = vec(mean(z; dims=2))
+    P = Hermitian(inv(cov(z; dims=2)))
+
+    return μ, P
+end
+
+include("featurespace.jl")
+include("normals.jl")
 include("exponentials/poly.jl")
-include("normals/sum-of-squares.jl")
+# include("exponentials/sum-of-squares.jl")
 
 Base.broadcastable(sd::SlicedDistribution) = Ref(sd)
 
 function Base.show(io::IO, sd::SlicedDistribution)
-    print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.t)),\n")
+    print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.fp)),\n")
     print(io, "  lb=$(sd.lb),\n")
     print(io, "  ub=$(sd.ub))")
     return nothing
