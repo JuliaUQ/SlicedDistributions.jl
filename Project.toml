@@ -1,10 +1,13 @@
 name = "SlicedDistributions"
 uuid = "78bc189a-7b6d-4df1-8a23-377b7c6fd0cb"
-authors = ["Jasper Behrensdorf <behrensdorf@irz.uni-hannover.de>"]
 version = "1.1.0"
+authors = ["Jasper Behrensdorf <behrensdorf@irz.uni-hannover.de>"]
 
 [deps]
+Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+HCubature = "19dc6840-f33b-545b-b366-655c7e3ffd49"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Monomials = "272bfe72-f66c-432f-a94d-600f29493792"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
@@ -14,7 +17,10 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TransitionalMCMC = "5bc637a6-1a46-43ed-8ea7-ee39cc1921ce"
 
 [compat]
+Clarabel = "0.8.1"
 Distributions = "0.25"
+HCubature = "1.7.0"
+JuMP = "1.29.2"
 Monomials = "1.0.0"
 Optim = "1.9.4"
 QuasiMonteCarlo = "0.3.3"

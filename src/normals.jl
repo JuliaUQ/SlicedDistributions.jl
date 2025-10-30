@@ -1,60 +1,69 @@
 κ = 1.0
 
 struct SlicedNormal <: SlicedDistribution
-    d::Integer
-    fp::MonomialFeatureSpace
-    Q::Matrix{<:Real}
-    lb::AbstractVector{<:Real}
-    ub::AbstractVector{<:Real}
-    c::Real
+	d::Integer
+	fp::MonomialFeatureSpace
+	Q::Matrix{<:Real}
+	lb::AbstractVector{<:Real}
+	ub::AbstractVector{<:Real}
+	c::Real
 end
 
 function SlicedNormal(
-    δ::AbstractMatrix,
-    d::Integer,
-    b::Integer=10000,
-    lb::AbstractVector{<:Real}=vec(minimum(δ; dims=2)),
-    ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
-)
-    s = QuasiMonteCarlo.sample(b, lb, ub, SobolSample())
+	δ::AbstractMatrix,
+	d::Integer,
+	b::Integer = 10000,
+	lb::AbstractVector{<:Real} = vec(minimum(δ; dims = 2)),
+	ub::AbstractVector{<:Real} = vec(maximum(δ; dims = 2));
+	method::Union{Nothing, CovarianceScaling} = nothing)
 
-    t = monomials(["δ$i" for i in 1:size(δ, 1)], d, GradedLexicographicOrder())
-    fp = MonomialFeatureSpace(t)
+	s = QuasiMonteCarlo.sample(b, lb, ub, SobolSample())
 
-    zδ = fp(δ)
-    zΔ = fp(s)
+	t = monomials(["δ$i" for i in 1:size(δ, 1)], d, GradedLexicographicOrder())
+	fp = MonomialFeatureSpace(t)
 
-    μ, P = mean_and_precision(zδ)
+	zδ = fp(δ)
+	zΔ = fp(s)
 
-    Q = vcat(
-        hcat(κ + μ'*P*μ, -μ'*P),
-        hcat(-P*μ, P)
-    )
+	μ, P = mean_and_precision(zδ)
 
-    # normalisation constant
-    cΔ = prod(ub-lb) / b * sum([exp(-ϕ(zΔ[:,i], Q)/2.0) for i in 1:b])
+	# scale covariance matrix before proceeding
+	if method isa CovarianceScaling
+	end
 
-    # likelihood in feature space
-    lh = sum([log(fz(zδ[:, i ], Q) / cΔ) for i in 1:size(δ,2)])
+	Q = vcat(
+		hcat(κ + μ'*P*μ, -μ'*P),
+		hcat(-P*μ, P),
+	)
 
-    return SlicedNormal(d, fp, Q, lb, ub,cΔ), lh
+	# normalisation constant
+	cΔ = prod(ub-lb) / b * sum([exp(-ϕ(zΔ[:, i], Q)/2.0) for i in 1:b])
+
+	# likelihood in feature space
+	lh = sum([log(fz(zδ[:, i], Q) / cΔ) for i in 1:size(δ, 2)])
+
+	return SlicedNormal(d, fp, Q, lb, ub, cΔ), lh
 end
 
-function ϕ(z::Vector{<:Real}, Q::Matrix{<:Real})
-    return [1, z...]' * Q * [1, z...] - κ
+function ϕ(z::Vector{<:Real}, Q::AbstractMatrix{<:Real})
+	return [1, z...]' * Q * [1, z...] - κ
+end
+
+function ϕ(z::Vector{<:Real}, μ::AbstractMatrix{<:Real}, P::AbstractMatrix{<:Real})
+	return (z - μ)'*P*(z-μ)
 end
 
 function fz(z::Vector{<:Real}, Q::Matrix{<:Real})
-    return exp(-ϕ(z,Q)/2.0)
+	return exp(-ϕ(z, Q)/2.0)
 end
 
 Base.length(sn::SlicedNormal) = length(sn.lb)
 
 function _logpdf(sn::SlicedNormal, δ::AbstractArray)
-    if all(sn.lb .<= δ .<= sn.ub)
-        z = sn.fp(δ)
-        return log(fz(z, sn.Q) / sn.c )
-    else
-        return log(0)
-    end
+	if all(sn.lb .<= δ .<= sn.ub)
+		z = sn.fp(δ)
+		return log(fz(z, sn.Q) / sn.c)
+	else
+		return log(0)
+	end
 end
