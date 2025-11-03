@@ -11,6 +11,7 @@ using Random
 import Base: eltype, length, show
 import Distributions: _logpdf, insupport
 export SlicedNormal, SlicedExponential
+export CovarianceScaling
 
 export pdf, insupport
 

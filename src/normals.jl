@@ -29,6 +29,37 @@ function SlicedNormal(
 
 	# scale covariance matrix before proceeding
 	if method isa CovarianceScaling
+
+		m = size(δ, 2)
+
+		ϕΔ = [ϕ(zΔ[:, i], μ, P)/2.0 for i in 1:b]
+		ϕδ = [ϕ(zδ[:, i], μ, P)/2.0 for i in 1:m]
+		sum_ϕδ = sum(ϕδ)
+
+		model = if method.optimizer isa MOI.AbstractOptimizer
+			Model(() -> method.optimizer)
+		else
+			Model(method.optimizer)
+		end
+
+		@variable(model, eps() <= γ <= Inf)
+		@variable(model, t)
+		@variable(model, w[1:b])
+
+		# Exponential cone constraints for logsumexp
+		for i in 1:b
+			@constraint(model, [-γ * ϕΔ[i] - t, 1.0, w[i]] in MOI.ExponentialCone())
+		end
+
+		@constraint(model, sum(w) <= 1)
+
+		@objective(model, Min, m * t + γ * sum_ϕδ)
+
+		set_silent(model)
+
+		optimize!(model)
+
+		P *= value(γ)
 	end
 
 	Q = vcat(
@@ -49,7 +80,7 @@ function ϕ(z::Vector{<:Real}, Q::AbstractMatrix{<:Real})
 	return [1, z...]' * Q * [1, z...] - κ
 end
 
-function ϕ(z::Vector{<:Real}, μ::AbstractMatrix{<:Real}, P::AbstractMatrix{<:Real})
+function ϕ(z::Vector{<:Real}, μ::AbstractVector{<:Real}, P::AbstractMatrix{<:Real})
 	return (z - μ)'*P*(z-μ)
 end
 
