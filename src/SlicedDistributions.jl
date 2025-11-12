@@ -90,7 +90,6 @@ function mean_and_precision(z::AbstractMatrix)
 end
 
 include("featurespace.jl")
-include("fitting.jl")
 include("normals.jl")
 include("exponentials/poly.jl")
 # include("exponentials/sum-of-squares.jl")
