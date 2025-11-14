@@ -30,7 +30,7 @@ function SlicedNormal(
 
 	μ, P = mean_and_precision(zδ)
 
-    V = prod(ub - lb)
+	V = prod(ub - lb)
 
 	local Q
 
@@ -91,7 +91,7 @@ function scale_covariance(
 
 	# Exponential cone constraints for logsumexp
 	for i in axes(zΔ, 2)
-		@constraint(model, [-γ * ϕ(zΔ[:, i], μ, P) - t, 1.0, w[i]] in MOI.ExponentialCone())
+		@constraint(model, [-γ * ϕ(zΔ[:, i], μ, P)/2.0 - t, 1.0, w[i]] in MOI.ExponentialCone())
 	end
 
 	@constraint(model, sum(w) <= 1)
@@ -111,38 +111,32 @@ function optimality_in_physical_space(
 	P::AbstractMatrix{<:Real},
 	zδ::AbstractMatrix{<:Real},
 	zΔ::AbstractMatrix{<:Real},
-    V::Real,
+	V::Real,
 	optimizer::Type{<:MOI.AbstractOptimizer},
 )
-m = size(zδ, 2)
-n = length(μ) + 1
-b = size(zΔ, 2)
-model = Model(optimizer)
+	m = size(zδ, 2)
+	n = length(μ) + 1
+	b = size(zΔ, 2)
+	model = Model(optimizer)
 
-@variable(model, Q[1:n, 1:n], PSD)
-@variable(model, t)
-@variable(model, w[1:b])
+	@variable(model, Q[1:n, 1:n], PSD)
+	@variable(model, t)
+	@variable(model, w[1:b])
 
-X = vcat(hcat(κ + μ' * P * μ, -μ' * P), hcat(-P * μ, P))
+	# Exponential cone constraints for logsumexp
+	for i in axes(zΔ, 2)
+		zi = zΔ[:, i]
+		@constraint(model, [-(0.5) * ([1; zi]' * Q * [1; zi] - κ) - t, 1.0, w[i]] in MOI.ExponentialCone())
+	end
 
-# for i in 1:n, j in 1:n
-#     set_start_value(Q[i,j], X[i,j])
-# end
+	@constraint(model, sum(w) <= 1)
 
-# Exponential cone constraints for logsumexp
-for i in axes(zΔ,2)
-    zi = zΔ[:, i]
-    @constraint(model, [-(0.5) * ([1; zi]' * Q * [1; zi] - κ) - t, 1.0, w[i]] in MOI.ExponentialCone())
-end
+	@expression(model, phi_sum, sum(([1; zδ[:, i]]' * Q * [1; zδ[:, i]] - κ) for i in 1:m))
 
-@constraint(model, sum(w) <= 1)
+	# Objective: maximize
+	@objective(model, Max, -m*(log(V) - log(b) + t) - 0.5 * phi_sum)
 
-@expression(model, phi_sum, sum(([1; zδ[:,i]]' * Q * [1; zδ[:,i]] - κ) for i = 1:m))
+	optimize!(model)
 
-# Objective: maximize
-@objective(model, Max, -m*(log(V) - log(b) + t) - 0.5 * phi_sum)
-
-optimize!(model)
-
-return value(Q)
+	return value(Q)
 end
