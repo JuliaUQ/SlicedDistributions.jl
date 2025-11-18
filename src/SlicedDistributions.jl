@@ -35,53 +35,6 @@ function Distributions.insupport(sd::SlicedDistribution, x::AbstractVector)
 	return all(sd.lb .<= x .<= sd.ub)
 end
 
-function get_likelihood(
-	zδ::Matrix{<:Real}, zΔ::Matrix{<:Real}, n::Integer, vol::Real, b::Integer,
-)
-	f = λ -> n * log(vol / b * sum(exp.(zΔ * λ / -2))) + sum(zδ * λ) / 2
-	return f
-end
-
-function get_gradient(zδ::Matrix{<:Real}, zΔ::Matrix{<:Real}, n::Integer)
-	f =
-		(g, λ) -> begin
-			exp_Δ = exp.(zΔ * λ / -2)
-			sum_exp_Δ = sum(exp_Δ)
-			for i in eachindex(g)
-				g[i] = @views n * sum(exp_Δ .* -0.5zΔ[:, i]) / sum_exp_Δ + sum(zδ[:, i]) / 2
-			end
-			return nothing
-		end
-	return f
-end
-
-function get_hessian(zΔ::Matrix{<:Real}, n::Integer)
-	f =
-		(H, λ) -> begin
-			exp_Δ = exp.(zΔ * λ / -2)
-			sum_exp_Δ = sum(exp_Δ)
-			sum_exp_Δ² = sum_exp_Δ^2
-
-			for i in axes(zΔ, 2)
-				exp_Δ_i = exp_Δ .* -0.5zΔ[:, i]
-				sum_exp_Δ_i = sum(exp_Δ_i)
-
-				for j in i:size(zΔ, 2)
-					Δ_j = @view zΔ[:, j]
-					H[i, j] =
-						n * (
-							sum(exp_Δ_i .* -0.5Δ_j) * sum_exp_Δ -
-							sum_exp_Δ_i * sum(exp_Δ .* -0.5Δ_j)
-						) / sum_exp_Δ²
-				end
-			end
-
-			H[:] = Symmetric(H)
-			return nothing
-		end
-	return f
-end
-
 function mean_and_precision(z::AbstractMatrix)
 	μ = vec(mean(z; dims = 2))
 	P = Hermitian(inv(cov(z; dims = 2)))
