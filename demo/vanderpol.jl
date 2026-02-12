@@ -1,6 +1,7 @@
 using DelimitedFiles
 using Plots
 using SlicedDistributions
+using Clarabel
 
 δ = readdlm("demo/data/vanderpol.csv", ',')
 
@@ -9,10 +10,10 @@ using SlicedDistributions
 lb = [-2.5, -3]
 ub = [2.5, 3.5]
 
-d = 3
+d = 8
 b = 10000
 
-sn, lh = SlicedNormal(δ, d, b, lb, ub)
+sn, lh = SlicedNormal(δ, d, b; lb, ub, optimizer=Clarabel.Optimizer)
 
 println("Likelihood: $lh")
 
@@ -44,11 +45,11 @@ scatter(
 xs = range(lb[1], ub[1]; length=1000)
 ys = range(lb[2], ub[2]; length=1000)
 
-contourf(
+contour(
     xs,
     ys,
     (x, y) -> pdf(sn, [x, y]);
-    color=:turbo,
+    #color=:turbo,
     aspect_ratio=:equal,
     xlims=[lb[1], ub[1]],
     ylims=[lb[2], ub[2]],
