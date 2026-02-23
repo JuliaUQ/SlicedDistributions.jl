@@ -13,7 +13,7 @@ ub = [2.5, 3.5]
 d = 8
 b = 10000
 
-sn, lh = SlicedNormal(δ, d, b; lb, ub, optimizer=Clarabel.Optimizer)
+sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 println("Likelihood: $lh")
 

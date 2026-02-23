@@ -2,6 +2,7 @@ module SlicedDistributions
 using Distributions
 using JuMP
 using LinearAlgebra
+using LogExpFunctions
 using Monomials
 using TransitionalMCMC
 using QuasiMonteCarlo
@@ -18,28 +19,28 @@ export pdf, insupport
 abstract type SlicedDistribution <: ContinuousMultivariateDistribution end
 
 function Distributions.rand!(rng::AbstractRNG, sd::SlicedDistribution, x::AbstractMatrix)
-	prior = Uniform.(sd.lb, sd.ub)
+    prior = Uniform.(sd.lb, sd.ub)
 
-	logprior(x) = sum(logpdf.(prior, x))
-	sampler(n) = mapreduce(u -> rand(rng, u, n), hcat, prior)
-	loglikelihood(x) = Distributions.logpdf(sd, x)
+    logprior(x) = sum(logpdf.(prior, x))
+    sampler(n) = mapreduce(u -> rand(rng, u, n), hcat, prior)
+    loglikelihood(x) = Distributions.logpdf(sd, x)
 
-	samples, _ = tmcmc(loglikelihood, logprior, sampler, size(x, 2))
+    samples, _ = tmcmc(loglikelihood, logprior, sampler, size(x, 2))
 
-	x[:] = permutedims(samples)
+    x[:] = permutedims(samples)
 
-	return x
+    return x
 end
 
 function Distributions.insupport(sd::SlicedDistribution, x::AbstractVector)
-	return all(sd.lb .<= x .<= sd.ub)
+    return all(sd.lb .<= x .<= sd.ub)
 end
 
 function mean_and_precision(z::AbstractMatrix)
-	μ = vec(mean(z; dims = 2))
-	P = Hermitian(inv(cov(z; dims = 2)))
+    μ = vec(mean(z; dims=2))
+    P = Hermitian(inv(cov(z; dims=2)))
 
-	return μ, P
+    return μ, P
 end
 
 include("featurespace.jl")
@@ -50,10 +51,10 @@ include("exponentials/poly.jl")
 Base.broadcastable(sd::SlicedDistribution) = Ref(sd)
 
 function Base.show(io::IO, sd::SlicedDistribution)
-	print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.fp)),\n")
-	print(io, "  lb=$(sd.lb),\n")
-	print(io, "  ub=$(sd.ub))")
-	return nothing
+    print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.fp)),\n")
+    print(io, "  lb=$(sd.lb),\n")
+    print(io, "  ub=$(sd.ub))")
+    return nothing
 end
 
 end

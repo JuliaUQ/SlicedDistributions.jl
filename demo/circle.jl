@@ -12,7 +12,7 @@ b = 10000
 lb = [-4, -4]
 ub = [4, 4]
 
-@time sn, lh = SlicedNormal(δ, d, b; lb, ub, optimizer=Clarabel.Optimizer)
+@time sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 samples = rand(sn, 1000)
 

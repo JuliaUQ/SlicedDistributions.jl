@@ -1,7 +1,6 @@
 using DelimitedFiles
 using Plots
 using SlicedDistributions
-using Clarabel
 
 δ = readdlm("demo/data/swirl.csv", ',')
 
@@ -13,7 +12,7 @@ ub = [18, 18]
 d = 7
 b = 10000
 
-sn, lh = SlicedNormal(δ, d, b; lb, ub, optimizer=Clarabel.Optimizer)
+sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 println("Likelihood: $lh")
 
