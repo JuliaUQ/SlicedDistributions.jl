@@ -1,6 +1,6 @@
 struct SlicedExponential <: SlicedDistribution
     d::Integer
-    fp::MonomialFeatureSpace
+    fp::AbstractFeatureSpace
     λ::AbstractVector
     lb::AbstractVector{<:Real}
     ub::AbstractVector{<:Real}
@@ -13,46 +13,45 @@ function SlicedExponential(
     b::Integer=10000;
     lb::AbstractVector{<:Real}=vec(minimum(δ; dims=2)),
     ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
-    optimizer::Union{Type{<:MOI.AbstractOptimizer}, Nothing} = nothing,
+    optimizer::Union{Type{<:MOI.AbstractOptimizer}}=Optim.Optimizer,
     basis::Symbol=:poly,
 )
-
     @assert basis in [:poly, :sos]
 
     s = QuasiMonteCarlo.sample(b, lb, ub, HaltonSample())
 
     t = monomials(["δ$i" for i in 1:size(δ, 1)], 2d, GradedLexicographicOrder())
-    fp = MonomialFeatureSpace(t)
+
+    fp = if basis == :poly
+        MonomialFeatureSpace(t)
+    else
+        μ, P = mean_and_precision(t(δ))
+        M = cholesky(P).U
+        SumOfSquaresFeatureSpace(t, μ, M)
+    end
 
     zδ = fp(δ)
     zΔ = fp(s)
 
     n = size(δ, 2)
     nz = length(fp)
-    V = prod(ub-lb)
+    V = prod(ub - lb)
 
     model = Model(optimizer)
 
-    @variable(model, λ[1:nz])
-
-    @variable(model, t)
-    @variable(model, w[1:b])
-    @constraint(model, sum(w) <= 1)
-
-    for i in axes(zΔ, 2)
-	zi = zΔ[:, i]
-	@constraint(model, [-0.5*dot(zi, λ) - t, 1.0, w[i]] in MOI.ExponentialCone())
+    if basis == :poly
+        @variable(model, λ[1:nz])
+    else
+        @variable(model, λ[1:nz] .>= 0.0)
     end
 
-    @expression(model, phi_sum, sum(dot(zδ[:, i], λ) for i ∈ 1:n))
+    @expression(model, cΔ, V / b * sum(exp.(zΔ' * λ ./ -2)))
 
-    @objective(model, Max, -n * (log(V) - log(b) + t) - 0.5*phi_sum)
+    @objective(model, Min, n * log(cΔ) + sum(zδ' * λ) / 2)
 
     optimize!(model)
 
-    cΔ = V / b * sum([exp(-dot(zΔ[:, i], value(λ)) / 2.0) for i in 1:b])
-
-    se = SlicedExponential(d, fp, value(λ), lb, ub, cΔ)
+    se = SlicedExponential(d, fp, value(λ), lb, ub, value(cΔ))
     return se, objective_value(model)
 end
 

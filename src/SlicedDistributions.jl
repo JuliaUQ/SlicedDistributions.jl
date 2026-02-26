@@ -38,15 +38,14 @@ end
 
 function mean_and_precision(z::AbstractMatrix)
     μ = vec(mean(z; dims=2))
-    P = Hermitian(inv(cov(z; dims=2)))
+    P = (inv(Symmetric(cov(z; dims=2))))
 
     return μ, P
 end
 
 include("featurespace.jl")
 include("normals.jl")
-include("exponentials/poly.jl")
-# include("exponentials/sum-of-squares.jl")
+include("exponentials.jl")
 
 Base.broadcastable(sd::SlicedDistribution) = Ref(sd)
 
