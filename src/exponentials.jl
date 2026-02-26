@@ -15,6 +15,7 @@ function SlicedExponential(
     ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
     optimizer::Union{Type{<:MOI.AbstractOptimizer}}=Optim.Optimizer,
     basis::Symbol=:poly,
+    attributes::Dict{<:AbstractString,<:Any}=Dict{AbstractString,Any}(),
 )
     @assert basis in [:poly, :sos]
 
@@ -38,6 +39,10 @@ function SlicedExponential(
     V = prod(ub - lb)
 
     model = Model(optimizer)
+
+    for k in keys(attributes)
+        set_attribute(model, k, attributes[k])
+    end
 
     if basis == :poly
         @variable(model, λ[1:nz])
