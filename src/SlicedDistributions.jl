@@ -4,6 +4,8 @@ using JuMP
 using LinearAlgebra
 using LogExpFunctions
 using Monomials
+using NearestCorrelationMatrix
+using StatsBase
 using TransitionalMCMC
 using QuasiMonteCarlo
 using Optim
@@ -36,11 +38,27 @@ function Distributions.insupport(sd::SlicedDistribution, x::AbstractVector)
     return all(sd.lb .<= x .<= sd.ub)
 end
 
+function nearPSD(A::AbstractMatrix{<:Real})
+    B = ((A + transpose(A)) / 2)
+    _, D, Vt = svd(A)
+    H = Vt * (diagm(D) * transpose(Vt))
+    Ahat = (B + H) / 2
+    return Ahat
+end
+
 function mean_and_precision(z::AbstractMatrix)
     μ = vec(mean(z; dims=2))
-    P = (inv(Symmetric(cov(z; dims=2))))
+    Σ = (cov(z; dims=2))
 
-    return μ, P
+    if isposdef(Σ)
+        return μ, inv(Symmetric(Σ))
+    else
+        C = Symmetric(cor(z; dims=2))
+        nearest_cor!(C)
+        s = std(z; dims=2)
+
+        return μ, inv(Symmetric(cor2cov(Matrix(C), s)))
+    end
 end
 
 include("featurespace.jl")
