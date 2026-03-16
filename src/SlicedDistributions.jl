@@ -1,6 +1,5 @@
 module SlicedDistributions
 using Distributions
-using JuMP
 using LinearAlgebra
 using LogExpFunctions
 using Monomials
@@ -9,12 +8,12 @@ using StatsBase
 using TransitionalMCMC
 using QuasiMonteCarlo
 using Optim
+using PreallocationTools
 using Random
 
 import Base: eltype, length, show
 import Distributions: _logpdf, insupport
 export SlicedNormal, SlicedExponential
-export CovarianceScaling
 
 export pdf, insupport
 
@@ -38,14 +37,6 @@ function Distributions.insupport(sd::SlicedDistribution, x::AbstractVector)
     return all(sd.lb .<= x .<= sd.ub)
 end
 
-function nearPSD(A::AbstractMatrix{<:Real})
-    B = ((A + transpose(A)) / 2)
-    _, D, Vt = svd(A)
-    H = Vt * (diagm(D) * transpose(Vt))
-    Ahat = (B + H) / 2
-    return Ahat
-end
-
 function mean_and_precision(z::AbstractMatrix)
     μ = vec(mean(z; dims=2))
     Σ = (cov(z; dims=2))
@@ -63,7 +54,8 @@ end
 
 include("featurespace.jl")
 include("normals.jl")
-include("exponentials.jl")
+include("exponentials/optim.jl")
+include("exponentials/exponentials.jl")
 
 Base.broadcastable(sd::SlicedDistribution) = Ref(sd)
 

@@ -13,9 +13,8 @@ function SlicedExponential(
     b::Integer=10000;
     lb::AbstractVector{<:Real}=vec(minimum(δ; dims=2)),
     ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
-    optimizer::Union{Type{<:MOI.AbstractOptimizer}}=Optim.Optimizer,
     basis::Symbol=:poly,
-    attributes::Dict{<:AbstractString,<:Any}=Dict{AbstractString,Any}(),
+    options::Optim.Options=Optim.Options(; iterations=10^6),
 )
     @assert basis in [:poly, :sos]
 
@@ -34,30 +33,46 @@ function SlicedExponential(
     zδ = fp(δ)
     zΔ = fp(s)
 
-    n = size(δ, 2)
     nz = length(fp)
     V = prod(ub - lb)
 
-    model = Model(optimizer)
+    f, ∇f!, ∇²f!, con!, ∇con!, ∇²con! = SlicedDistributions.prepare_optimization(
+        zΔ, zδ, V, b
+    )
 
-    for k in keys(attributes)
-        set_attribute(model, k, attributes[k])
-    end
-
-    if basis == :poly
-        @variable(model, λ[1:nz])
+    lx, ux, x0 = if basis == :poly
+        fill(-Inf, nz), fill(Inf, nz), zeros(nz)
     else
-        @variable(model, λ[1:nz] .>= 0.0)
+        fill(0.0, nz), fill(Inf, nz), fill(1e-4, nz)
     end
 
-    @expression(model, cΔ, V / b * sum(exp.(zΔ' * λ ./ -2)))
+    @show f(x0)
 
-    @objective(model, Min, n * log(cΔ) + sum(zδ' * λ) / 2)
+    # H = zeros(nz, nz)
+    # ∇²con!(H, x0, [7.166577e+04])
+    # @show H
 
-    optimize!(model)
+    # g = zeros(nz)
+    # ∇f!(g, x0)
+    # H = zeros(nz, nz)
+    # ∇²f!(H, x0)
 
-    se = SlicedExponential(d, fp, value(λ), lb, ub, value(cΔ))
-    return se, objective_value(model)
+    # ∇f!(g, x0)
+    # @show f(x0)
+    # @show g
+    # @show H
+
+    df = TwiceDifferentiable(f, ∇f!, ∇²f!, x0)
+    dfc = TwiceDifferentiableConstraints(con!, ∇con!, ∇²con!, lx, ux, [-Inf], [1e200])
+
+    res = optimize(df, dfc, x0, IPNewton(), options)
+
+    @show res
+
+    cΔ = V / b * sum(exp.(-0.5 * zΔ' * res.minimizer))
+
+    se = SlicedExponential(d, fp, res.minimizer, lb, ub, cΔ)
+    return se, -res.minimum
 end
 
 function _logpdf(se::SlicedExponential, δ::AbstractArray)

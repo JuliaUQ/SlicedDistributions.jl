@@ -3,7 +3,8 @@ const κ = 1.0
 struct SlicedNormal <: SlicedDistribution
     d::Integer
     fp::MonomialFeatureSpace
-    Q::AbstractMatrix{<:Real}
+    μ::AbstractVector{<:Real}
+    P::AbstractMatrix{<:Real}
     lb::AbstractVector{<:Real}
     ub::AbstractVector{<:Real}
     c::Real
@@ -15,15 +16,13 @@ function SlicedNormal(
     b::Integer=10000;
     lb::AbstractVector{<:Real}=vec(minimum(δ; dims=2)),
     ub::AbstractVector{<:Real}=vec(maximum(δ; dims=2)),
-    optimizer::Union{Type{<:MOI.AbstractOptimizer},Nothing}=nothing,
-    optimality::Symbol=:feature,
 )
-    @assert optimality in [:feature, :physical]
-
     s = QuasiMonteCarlo.sample(b, lb, ub, HaltonSample())
 
     t = monomials(["δ$i" for i in 1:size(δ, 1)], d, GradedLexicographicOrder())
     fp = MonomialFeatureSpace(t)
+
+    n = size(δ, 2)
 
     zδ = fp(δ)
     zΔ = fp(s)
@@ -32,34 +31,19 @@ function SlicedNormal(
 
     V = prod(ub - lb)
 
-    local Q
-
-    if optimality == :feature
-        P = scale_covariance(μ, P, zδ, zΔ)
-        Q = vcat(hcat(κ + μ' * P * μ, -μ' * P), hcat(-P * μ, P))
-    elseif optimality == :physical
-        Q = optimality_in_physical_space(μ, P, zδ, zΔ, V, optimizer)
-    end
+    P = scale_covariance(μ, P, zδ, zΔ)
 
     # normalisation constant
-    cΔ = V / b * sum([exp(-ϕ(zΔ[:, i], Q) / 2.0) for i in 1:b])
+    cΔ = V / b * sum([exp(-0.5 * ϕ(zΔ[:, i], μ, P)) for i in 1:b])
 
     # likelihood
-    lh = sum([log(fz(zδ[:, i], Q) / cΔ) for i in 1:size(δ, 2)])
+    lh = -n * log(cΔ) - 0.5 * sum([ϕ(zδ[:, i], μ, P) for i in axes(zδ, 2)])
 
-    return SlicedNormal(d, fp, Q, lb, ub, cΔ), lh
-end
-
-function ϕ(z::Vector{<:Real}, Q::AbstractMatrix{<:Real})
-    return [1, z...]' * Q * [1, z...] - κ
+    return SlicedNormal(d, fp, μ, P, lb, ub, cΔ), lh
 end
 
 function ϕ(z::Vector{<:Real}, μ::AbstractVector{<:Real}, P::AbstractMatrix{<:Real})
     return (z - μ)' * P * (z - μ)
-end
-
-function fz(z::Vector{<:Real}, Q::AbstractMatrix{<:Real})
-    return exp(-ϕ(z, Q) / 2.0)
 end
 
 Base.length(sn::SlicedNormal) = length(sn.lb)
@@ -67,7 +51,7 @@ Base.length(sn::SlicedNormal) = length(sn.lb)
 function _logpdf(sn::SlicedNormal, δ::AbstractArray)
     if all(sn.lb .<= δ .<= sn.ub)
         z = sn.fp(δ)
-        return log(fz(z, sn.Q) / sn.c)
+        return log(exp(-0.5ϕ(z, sn.μ, sn.P)) / sn.c)
     else
         return log(0)
     end
@@ -91,42 +75,4 @@ function scale_covariance(
     res = optimize(f, eps(), 10000, Brent())
 
     return Optim.minimizer(res) * P
-end
-
-function optimality_in_physical_space(
-    μ::AbstractVector{<:Real},
-    P::AbstractMatrix{<:Real},
-    zδ::AbstractMatrix{<:Real},
-    zΔ::AbstractMatrix{<:Real},
-    V::Real,
-    optimizer::Type{<:MOI.AbstractOptimizer},
-)
-    m = size(zδ, 2)
-    n = length(μ) + 1
-    b = size(zΔ, 2)
-    model = Model(optimizer)
-
-    @variable(model, Q[1:n, 1:n], PSD)
-    @variable(model, t)
-    @variable(model, w[1:b])
-
-    # Exponential cone constraints for logsumexp
-    for i in axes(zΔ, 2)
-        zi = zΔ[:, i]
-        @constraint(
-            model,
-            [-(0.5) * ([1; zi]' * Q * [1; zi] - κ) - t, 1.0, w[i]] in MOI.ExponentialCone()
-        )
-    end
-
-    @constraint(model, sum(w) <= 1)
-
-    @expression(model, phi_sum, sum(([1; zδ[:, i]]' * Q * [1; zδ[:, i]] - κ) for i in 1:m))
-
-    # Objective: maximize
-    @objective(model, Max, -m * (log(V) - log(b) + t) - 0.5 * phi_sum)
-
-    optimize!(model)
-
-    return value(Q)
 end
