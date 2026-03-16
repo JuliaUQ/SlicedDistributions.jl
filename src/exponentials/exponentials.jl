@@ -46,28 +46,10 @@ function SlicedExponential(
         fill(0.0, nz), fill(Inf, nz), fill(1e-4, nz)
     end
 
-    @show f(x0)
-
-    # H = zeros(nz, nz)
-    # ∇²con!(H, x0, [7.166577e+04])
-    # @show H
-
-    # g = zeros(nz)
-    # ∇f!(g, x0)
-    # H = zeros(nz, nz)
-    # ∇²f!(H, x0)
-
-    # ∇f!(g, x0)
-    # @show f(x0)
-    # @show g
-    # @show H
-
     df = TwiceDifferentiable(f, ∇f!, ∇²f!, x0)
     dfc = TwiceDifferentiableConstraints(con!, ∇con!, ∇²con!, lx, ux, [-Inf], [1e200])
 
     res = optimize(df, dfc, x0, IPNewton(), options)
-
-    @show res
 
     cΔ = V / b * sum(exp.(-0.5 * zΔ' * res.minimizer))
 

@@ -31,7 +31,8 @@ function prepare_optimization(
 
     # constraint
     function con!(c, λ)
-        return c[1] = V / b * sum(exp.(-0.5 * zΔ' * λ))
+        c[1] = V / b * sum(exp.(-0.5 * zΔ' * λ))
+        return c
     end
 
     # constraint jacobian
