@@ -20,9 +20,9 @@ end
 
 @testset "Sum of Squares" begin
     d = 3
-    b = 10000
+    b = 20000
 
-    sn, _ = SlicedExponential(δ, d, b; lb=[-4.0, -4.0], ub=[4.0, 4.0], basis=:poly)
+    sn, _ = SlicedExponential(δ, d, b; lb=[-4.0, -4.0], ub=[4.0, 4.0], basis=:sos)
 
     @test all(insupport.(sn, eachcol(δ)))
 
