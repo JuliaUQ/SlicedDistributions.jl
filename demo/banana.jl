@@ -1,7 +1,6 @@
 using DelimitedFiles
 using Plots
 using SlicedDistributions
-using Clarabel
 
 δ = readdlm("demo/data/banana.csv", ',')
 
