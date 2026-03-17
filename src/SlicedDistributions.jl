@@ -44,11 +44,18 @@ function mean_and_precision(z::AbstractMatrix)
     if isposdef(Σ)
         return μ, inv(Symmetric(Σ))
     else
+        @info "Correcting non-PSD matrix..."
         C = Symmetric(cor(z; dims=2))
         nearest_cor!(C)
         s = std(z; dims=2)
 
-        return μ, inv(Symmetric(cor2cov(Matrix(C), s)))
+        P = inv(Symmetric(cor2cov(Matrix(C), s)))
+
+        if !isposdef(P)
+            throw(ErrorException("Failed to obtain PSD precision matrix."))
+        end
+
+        return μ, P
     end
 end
 
