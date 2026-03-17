@@ -1,14 +1,3 @@
-function shared_tests(sn::SlicedDistributions.SlicedNormal, δ::AbstractMatrix{<:Real})
-    @test all(insupport.(sn, eachcol(δ)))
-
-    @test hcubature(x -> pdf(sn, x), sn.lb, sn.ub)[1] ≈ 1.0 atol = 1e-3
-
-    samples = rand(sn, 1000)
-
-    @test all(insupport.(sn, eachcol(samples)))
-    @test all(pdf.(sn, eachcol(samples)) .>= 0)
-end
-
 @testset "SlicedNormal" begin
     @testset "Banana" begin
         δ = readdlm("../demo/data/banana.csv", ',')
@@ -65,5 +54,22 @@ end
         shared_tests(sn, δ)
 
         @test repr(sn) == "SlicedNormal(nδ=2, d=7, nz=35,\n  lb=[-18, -18],\n  ub=[18, 18])"
+    end
+
+    @testset "Van-der-Pol" begin
+        δ = readdlm("../demo/data/vanderpol.csv", ',')
+
+        lb = [-2.5, -3]
+        ub = [2.5, 3.5]
+
+        d = 8
+        b = 20000
+
+        sn, _ = SlicedNormal(δ, d, b; lb, ub)
+
+        shared_tests(sn, δ)
+
+        @test repr(sn) ==
+            "SlicedNormal(nδ=2, d=8, nz=44,\n  lb=[-2.5, -3.0],\n  ub=[2.5, 3.5])"
     end
 end
