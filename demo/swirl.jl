@@ -9,10 +9,10 @@ using SlicedDistributions
 lb = [-18, -18]
 ub = [18, 18]
 
-d = 4
+d = 7
 b = 10000
 
-sn, lh = SlicedNormal(δ, d, b, lb, ub)
+sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 println("Likelihood: $lh")
 
@@ -20,16 +20,10 @@ println("Likelihood: $lh")
 xs = range(lb[1], ub[1]; length=1000)
 ys = range(lb[2], ub[2]; length=1000)
 
-p2 = contour(
-    xs,
-    ys,
-    (x, y) -> pdf(sn, [x, y]);
-    xlims=[lb[1], ub[1]],
-    ylims=[lb[2], ub[2]],
-)
+p2 = contour(xs, ys, (x, y) -> pdf(sn, [x, y]); xlims=[lb[1], ub[1]], ylims=[lb[2], ub[2]])
 
-
-scatter!(p2,
+scatter!(
+    p2,
     δ[1, :],
     δ[2, :];
     xlims=[lb[1], ub[1]],
@@ -43,7 +37,8 @@ scatter!(p2,
 
 samples = rand(sn, 2000)
 
-scatter!(p2,
+scatter!(
+    p2,
     samples[1, :],
     samples[2, :];
     xlims=[lb[1], ub[1]],

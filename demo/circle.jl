@@ -5,12 +5,13 @@ using SlicedDistributions
 δ = readdlm("demo/data/circle.csv", ',')
 
 # Fit Sliced Normal Distribution
-d = 3
+d = 4
 b = 10000
 
-@time sn, lh = SlicedNormal(δ, d, b, [-4, -4], [4, 4])
+lb = [-4, -4]
+ub = [4, 4]
 
-println("Likelihood: $lh")
+@time sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 samples = rand(sn, 1000)
 

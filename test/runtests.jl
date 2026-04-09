@@ -1,42 +1,43 @@
 using DelimitedFiles
 using HCubature
+using LinearAlgebra
 using Logging
 using SlicedDistributions
+using StatsBase
 using Test
+using ForwardDiff
+using QuasiMonteCarlo
+using Monomials
 
+# Disable TMCMC Output during tests
 Logging.disable_logging(Logging.Info)
 
-circle = readdlm("../demo/data/circle.csv", ',')
-
-d = 3
-b = 10000
-
-@testset "SlicedNormal" begin
-    sn, _ = SlicedNormal(circle, d, b)
-
-    @test all(insupport.(sn, eachcol(circle)))
+function shared_tests(sn::SlicedDistributions.SlicedDistribution, δ::AbstractMatrix{<:Real})
+    @test all(insupport.(sn, eachcol(δ)))
 
     @test hcubature(x -> pdf(sn, x), sn.lb, sn.ub)[1] ≈ 1.0 atol = 1e-3
 
     samples = rand(sn, 1000)
 
     @test all(insupport.(sn, eachcol(samples)))
+    @test all(pdf.(sn, eachcol(samples)) .>= 0)
 
-    @test repr(sn) ==
-        "SlicedNormal(nδ=2, d=3, nz=27,\n  lb=[-3.2929135595124106, -3.453912509293032],\n  ub=[3.3151850678141344, 3.3768332192657207])"
+    @test pdf(sn, sn.lb .- 1) == 0.0
+    @test pdf(sn, sn.ub .+ 1) == 0.0
 end
 
+@testset "Mean and Precision" begin
+δ = readdlm("../demo/data/banana.csv", ',')
+t = monomials(["δ$i" for i in 1:size(δ, 1)], 10, GradedLexicographicOrder())
+zδ = t(δ)
+@test !isposdef(cov(zδ;dims=2))
+_, P = SlicedDistributions.mean_and_precision(zδ)
+@test isposdef(P)
+end
+
+include("normals.jl")
+
 @testset "SlicedExponential" begin
-    se, _ = SlicedExponential(circle, d, b)
-
-    @test all(insupport.(se, eachcol(circle)))
-
-    @test hcubature(x -> pdf(se, x), se.lb, se.ub)[1] ≈ 1.0 atol = 1e-3
-
-    samples = rand(se, 1000)
-
-    @test all(insupport.(se, eachcol(samples)))
-
-    @test repr(se) ==
-        "SlicedExponential(nδ=2, d=3, nz=27,\n  lb=[-3.2929135595124106, -3.453912509293032],\n  ub=[3.3151850678141344, 3.3768332192657207])"
+    include("exponentials/optim.jl")
+    include("exponentials/exponentials.jl")
 end

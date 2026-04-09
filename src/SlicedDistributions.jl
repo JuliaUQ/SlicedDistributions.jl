@@ -1,15 +1,18 @@
 module SlicedDistributions
 using Distributions
 using LinearAlgebra
+using LogExpFunctions
 using Monomials
+using NearestCorrelationMatrix
+using StatsBase
 using TransitionalMCMC
 using QuasiMonteCarlo
 using Optim
+using PreallocationTools
 using Random
 
 import Base: eltype, length, show
 import Distributions: _logpdf, insupport
-
 export SlicedNormal, SlicedExponential
 
 export pdf, insupport
@@ -34,60 +37,37 @@ function Distributions.insupport(sd::SlicedDistribution, x::AbstractVector)
     return all(sd.lb .<= x .<= sd.ub)
 end
 
-function get_likelihood(
-    zδ::Matrix{<:Real}, zΔ::Matrix{<:Real}, n::Integer, vol::Real, b::Integer
-)
-    f = λ -> n * log(vol / b * sum(exp.(zΔ * λ / -2))) + sum(zδ * λ) / 2
-    return f
-end
+function mean_and_precision(z::AbstractMatrix)
+    μ = vec(mean(z; dims=2))
+    Σ = (cov(z; dims=2))
 
-function get_gradient(zδ::Matrix{<:Real}, zΔ::Matrix{<:Real}, n::Integer)
-    f =
-        (g, λ) -> begin
-            exp_Δ = exp.(zΔ * λ / -2)
-            sum_exp_Δ = sum(exp_Δ)
-            for i in eachindex(g)
-                g[i] = @views n * sum(exp_Δ .* -0.5zΔ[:, i]) / sum_exp_Δ + sum(zδ[:, i]) / 2
-            end
-            return nothing
+    if isposdef(Σ)
+        return μ, inv(Symmetric(Σ))
+    else
+        @info "Correcting non-PSD matrix..."
+        C = Symmetric(cor(z; dims=2))
+        nearest_cor!(C)
+        s = std(z; dims=2)
+
+        P = inv(Symmetric(cor2cov(Matrix(C), s)))
+
+        if !isposdef(P)
+            throw(ErrorException("Failed to obtain PSD precision matrix."))
         end
-    return f
+
+        return μ, P
+    end
 end
 
-function get_hessian(zΔ::Matrix{<:Real}, n::Integer)
-    f =
-        (H, λ) -> begin
-            exp_Δ = exp.(zΔ * λ / -2)
-            sum_exp_Δ = sum(exp_Δ)
-            sum_exp_Δ² = sum_exp_Δ^2
-
-            for i in axes(zΔ, 2)
-                exp_Δ_i = exp_Δ .* -0.5zΔ[:, i]
-                sum_exp_Δ_i = sum(exp_Δ_i)
-
-                for j in i:size(zΔ, 2)
-                    Δ_j = @view zΔ[:, j]
-                    H[i, j] =
-                        n * (
-                            sum(exp_Δ_i .* -0.5Δ_j) * sum_exp_Δ -
-                            sum_exp_Δ_i * sum(exp_Δ .* -0.5Δ_j)
-                        ) / sum_exp_Δ²
-                end
-            end
-
-            H[:] = Symmetric(H)
-            return nothing
-        end
-    return f
-end
-
-include("exponentials/poly.jl")
-include("normals/sum-of-squares.jl")
+include("featurespace.jl")
+include("normals.jl")
+include("exponentials/optim.jl")
+include("exponentials/exponentials.jl")
 
 Base.broadcastable(sd::SlicedDistribution) = Ref(sd)
 
 function Base.show(io::IO, sd::SlicedDistribution)
-    print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.t)),\n")
+    print(io, "$(typeof(sd))(nδ=$(length(sd)), d=$(sd.d), nz=$(length(sd.fp)),\n")
     print(io, "  lb=$(sd.lb),\n")
     print(io, "  ub=$(sd.ub))")
     return nothing

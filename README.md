@@ -14,7 +14,17 @@ Sliced distributions enable the characterization of, possibly dependent, multiva
 
 The distributions are fully compliant with the [*Distributions.jl*](https://github.com/JuliaStats/Distributions.jl) interface of a `ContinuousMultivariateDistribution`.
 
-Note, that the sliced-Normals are estimated by choosing a square polynomial basis and restricting the decision space of the sliced-Exponentials, see [2, Section VII].
+## Sliced-Normals
+
+Sliced-Normal distributions are estimated by first finding the optimal fit in the feature space which might characterize the data poorly and then scaling the covariance matrix to improve the suboptimal hyperparameters as presented in [3].
+
+## Sliced-Exponentials
+
+Sliced-Exponential distributions are by default estimated to maximize the likelihood in physical space. The resulting distributions are very accurate but costly to estimate.
+
+As an alternative, a more efficient estimate can be obtained by choosing a square polynomial basis and restricting the decision space of the sliced-Exponentials, see [2, Section VII]. This  feature can be enabled by passing the `basis=:sos` keyword to the constructor. These distributions are far cheaper to estimate and still accurately represent the data.
+
+Optimisation of the hyperparameters is performed using [*Optim.jl*](https://github.com/JuliaNLSolvers/Optim.jl). The constructor for `SlicedExponential` accepts an `Optim.Options`  object as the `options` keyword to modify the optimisation parameters.
 
 ## Example
 
@@ -63,3 +73,6 @@ Internally this will use TMCMC to sample from the PDF. See the next Figure for a
 [1] L. G. Crespo, B. K. Colbert, S. P. Kenny, and D. P. Giesy, ‘On the quantification of aleatory and epistemic uncertainty using Sliced-Normal distributions’, Systems & Control Letters, vol. 134, p. 104560, Dec. 2019, doi: [10.1016/j.sysconle.2019.104560](https://doi.org/10.1016/j.sysconle.2019.104560).
 
 [2] L. G. Crespo, B. K. Colbert, T. Slager, and S. P. Kenny, ‘Robust Estimation of Sliced-Exponential Distributions’, in 2021 60th IEEE Conference on Decision and Control (CDC), Austin, TX, USA: IEEE, Dec. 2021, pp. 6742–6748. doi: [10.1109/CDC45484.2021.9683584](https://doi.org/10.1109/CDC45484.2021.9683584).
+
+[3] B. K. Colbert, L. G. Crespo, and M. M. Peet, ‘A Convex Optimization Approach to Improving Suboptimal Hyperparameters of Sliced Normal Distributions’, in 2020 American Control Conference (ACC), Denver, CO, USA: IEEE, Jul. 2020, pp. 4478–4483. doi: [10.23919/ACC45564.2020.9147403](https://doi.org/10.23919/ACC45564.2020.9147403).
+

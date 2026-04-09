@@ -12,7 +12,7 @@ ub = [3.5, 60]
 d = 2
 b = 10000
 
-sn, lh = SlicedNormal(δ, d, b, lb, ub)
+sn, lh = SlicedNormal(δ, d, b; lb, ub)
 
 println("Likelihood: $lh")
 
@@ -20,15 +20,10 @@ println("Likelihood: $lh")
 xs = range(lb[1], ub[1]; length=1000)
 ys = range(lb[2], ub[2]; length=1000)
 
-p = contour(
-    xs,
-    ys,
-    (x, y) -> pdf(sn, [x, y]);
-    xlims=[lb[1], ub[1]],
-    ylims=[lb[2], ub[2]],
-)
+p = contour(xs, ys, (x, y) -> pdf(sn, [x, y]); xlims=[lb[1], ub[1]], ylims=[lb[2], ub[2]])
 
-scatter!(p,
+scatter!(
+    p,
     δ[1, :],
     δ[2, :];
     xlims=[lb[1], ub[1]],
@@ -42,7 +37,8 @@ scatter!(p,
 
 samples = rand(sn, 2000)
 
-scatter!(p,
+scatter!(
+    p,
     samples[1, :],
     samples[2, :];
     xlims=[lb[1], ub[1]],
@@ -53,5 +49,3 @@ scatter!(p,
     markersize=2,
     markeralpha=0.3,
 )
-
-
