@@ -1,7 +1,9 @@
 using DelimitedFiles
 using HCubature
+using LinearAlgebra
 using Logging
 using SlicedDistributions
+using StatsBase
 using Test
 using ForwardDiff
 using QuasiMonteCarlo
@@ -22,6 +24,15 @@ function shared_tests(sn::SlicedDistributions.SlicedDistribution, δ::AbstractMa
 
     @test pdf(sn, sn.lb .- 1) == 0.0
     @test pdf(sn, sn.ub .+ 1) == 0.0
+end
+
+@testset "Mean and Precision" begin
+δ = readdlm("../demo/data/banana.csv", ',')
+t = monomials(["δ$i" for i in 1:size(δ, 1)], 10, GradedLexicographicOrder())
+zδ = t(δ)
+@test !isposdef(cov(zδ;dims=2))
+_, P = SlicedDistributions.mean_and_precision(zδ)
+@test isposdef(P)
 end
 
 include("normals.jl")
