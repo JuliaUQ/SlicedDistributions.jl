@@ -26,6 +26,7 @@ references:
       - given-names: Daniel P.
         family-names: Giesy
     doi: 10.1016/j.sysconle.2019.104560
+    type: article
     title: On the quantification of aleatory and epistemic uncertainty using Sliced-Normal distributions
     journal: Systems & Control Letters
     volume: 134
@@ -38,9 +39,10 @@ references:
       - given-names: Matthew M.
         family-names: Peet
     doi: 10.23919/ACC45564.2020.9147403
+    type: conference-paper
     title: A Convex Optimization Approach to Improving Suboptimal Hyperparameters of Sliced Normal Distributions
-    conference: 2020 American Control Conference (ACC)
-    publisher: IEEE
+    conference:
+      name: 2020 American Control Conference (ACC)
     year: 2020
   - authors:
       - given-names: Luis G.
@@ -52,7 +54,8 @@ references:
       - given-names: Sean P.
         family-names: Kenny
     doi: 10.1109/CDC45484.2021.9683584
+    type: conference-paper
     title: Robust Estimation of Sliced-Exponential Distributions
-    conference: 2021 60th IEEE Conference on Decision and Control (CDC)
-    publisher: IEEE
+    conference:
+      name: 2021 60th IEEE Conference on Decision and Control (CDC)
     year: 2021
