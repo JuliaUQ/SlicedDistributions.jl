@@ -1,7 +1,7 @@
 # SlicedDistributions.jl
 
 ![Build Status](https://github.com/JuliaUQ/SlicedDistributions.jl/workflows/CI/badge.svg)
-[![Coverage Status](https://codecov.io/gh/FriesischScott/SlicedDistributions.jl/branch/master/graph/badge.svg?token=LfslMAoWvA)](https://codecov.io/gh/FriesischScott/SlicedDistributions.jl)
+[![codecov](https://codecov.io/gh/JuliaUQ/SlicedDistributions.jl/graph/badge.svg?token=W36W36UY72)](https://codecov.io/gh/JuliaUQ/SlicedDistributions.jl)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15095609.svg)](https://doi.org/10.5281/zenodo.15095609)
 
 A julia package for robust estimation and sampling of sliced distributions [1, 2]
