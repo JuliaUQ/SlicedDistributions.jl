@@ -1,6 +1,6 @@
 # SlicedDistributions.jl
 
-![Build Status](https://github.com/friesischscott/SlicedDistributions.jl/workflows/CI/badge.svg)
+![Build Status](https://github.com/JuliaUQ/SlicedDistributions.jl/workflows/CI/badge.svg)
 [![Coverage Status](https://codecov.io/gh/FriesischScott/SlicedDistributions.jl/branch/master/graph/badge.svg?token=LfslMAoWvA)](https://codecov.io/gh/FriesischScott/SlicedDistributions.jl)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15095609.svg)](https://doi.org/10.5281/zenodo.15095609)
 
