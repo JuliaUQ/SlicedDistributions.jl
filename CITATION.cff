@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+title: SlicedDistributions
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jasper
+    family-names: Behrensdorf
+    orcid: 'https://orcid.org/0000-0001-9628-7250'
+    email: behrensdorf@irz.uni-hannover.de
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15095609
+repository-code: 'https://github.com/JuliaUQ/SlicedDistributions.jl'
+license: MIT
+version: 2.0.0
+references:
+  - authors:
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Sean P.
+        family-names: Kenny
+      - given-names: Daniel P.
+        family-names: Giesy
+    doi: 10.1016/j.sysconle.2019.104560
+    type: article
+    title: On the quantification of aleatory and epistemic uncertainty using Sliced-Normal distributions
+    journal: Systems & Control Letters
+    volume: 134
+    year: 2019
+  - authors:
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Matthew M.
+        family-names: Peet
+    doi: 10.23919/ACC45564.2020.9147403
+    type: conference-paper
+    title: A Convex Optimization Approach to Improving Suboptimal Hyperparameters of Sliced Normal Distributions
+    conference:
+      name: 2020 American Control Conference (ACC)
+    year: 2020
+  - authors:
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Tanner
+        family-names: Slager
+      - given-names: Sean P.
+        family-names: Kenny
+    doi: 10.1109/CDC45484.2021.9683584
+    type: conference-paper
+    title: Robust Estimation of Sliced-Exponential Distributions
+    conference:
+      name: 2021 60th IEEE Conference on Decision and Control (CDC)
+    year: 2021

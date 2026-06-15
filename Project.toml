@@ -1,6 +1,6 @@
 name = "SlicedDistributions"
 uuid = "78bc189a-7b6d-4df1-8a23-377b7c6fd0cb"
-version = "1.1.0"
+version = "2.0.0"
 authors = ["Jasper Behrensdorf <behrensdorf@irz.uni-hannover.de>"]
 
 [deps]
@@ -21,7 +21,7 @@ Distributions = "0.25"
 LogExpFunctions = "0.3.29"
 Monomials = "1.0.0"
 NearestCorrelationMatrix = "1.1.1"
-Optim = "1.9.4"
+Optim = "2.0"
 PreallocationTools = "1.1.2"
 QuasiMonteCarlo = "0.3.3"
 StatsBase = "0.33"
