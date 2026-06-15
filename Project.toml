@@ -18,7 +18,7 @@ TransitionalMCMC = "5bc637a6-1a46-43ed-8ea7-ee39cc1921ce"
 
 [compat]
 Distributions = "0.25"
-LogExpFunctions = "0.3.29"
+LogExpFunctions = "0.3.29, 1.0"
 Monomials = "1.0.0"
 NearestCorrelationMatrix = "1.1.1"
 Optim = "2.0"
