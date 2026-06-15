@@ -1,6 +1,6 @@
 name = "SlicedDistributions"
 uuid = "78bc189a-7b6d-4df1-8a23-377b7c6fd0cb"
-version = "1.1.0"
+version = "2.0.0"
 authors = ["Jasper Behrensdorf <behrensdorf@irz.uni-hannover.de>"]
 
 [deps]
