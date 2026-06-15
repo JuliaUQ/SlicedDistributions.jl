@@ -15,3 +15,44 @@ identifiers:
 repository-code: 'https://github.com/JuliaUQ/SlicedDistributions.jl'
 license: MIT
 version: 2.0.0
+references:
+  - authors:
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Sean P.
+        family-names: Kenny
+      - given-names: Daniel P.
+        family-names: Giesy
+    doi: 10.1016/j.sysconle.2019.104560
+    title: On the quantification of aleatory and epistemic uncertainty using Sliced-Normal distributions
+    journal: Systems & Control Letters
+    volume: 134
+    year: 2019
+  - authors:
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Matthew M.
+        family-names: Peet
+    doi: 10.23919/ACC45564.2020.9147403
+    title: A Convex Optimization Approach to Improving Suboptimal Hyperparameters of Sliced Normal Distributions
+    conference: 2020 American Control Conference (ACC)
+    publisher: IEEE
+    year: 2020
+  - authors:
+      - given-names: Luis G.
+        family-names: Crespo
+      - given-names: Brendon K.
+        family-names: Colbert
+      - given-names: Tanner
+        family-names: Slager
+      - given-names: Sean P.
+        family-names: Kenny
+    doi: 10.1109/CDC45484.2021.9683584
+    title: Robust Estimation of Sliced-Exponential Distributions
+    conference: 2021 60th IEEE Conference on Decision and Control (CDC)
+    publisher: IEEE
+    year: 2021
