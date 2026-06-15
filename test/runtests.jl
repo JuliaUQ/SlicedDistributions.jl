@@ -3,6 +3,7 @@ using HCubature
 using LinearAlgebra
 using Logging
 using SlicedDistributions
+using Statistics
 using StatsBase
 using Test
 using ForwardDiff
@@ -27,12 +28,12 @@ function shared_tests(sn::SlicedDistributions.SlicedDistribution, δ::AbstractMa
 end
 
 @testset "Mean and Precision" begin
-δ = readdlm("../demo/data/banana.csv", ',')
-t = monomials(["δ$i" for i in 1:size(δ, 1)], 10, GradedLexicographicOrder())
-zδ = t(δ)
-@test !isposdef(cov(zδ;dims=2))
-_, P = SlicedDistributions.mean_and_precision(zδ)
-@test isposdef(P)
+    δ = readdlm("../demo/data/banana.csv", ',')
+    t = monomials(["δ$i" for i in 1:size(δ, 1)], 10, GradedLexicographicOrder())
+    zδ = t(δ)
+    @test !isposdef(Statistics.cov(zδ; dims=2))
+    _, P = SlicedDistributions.mean_and_precision(zδ)
+    @test isposdef(P)
 end
 
 include("normals.jl")
